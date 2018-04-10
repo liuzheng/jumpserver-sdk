@@ -50,15 +50,17 @@ func (t *TerminalServer) TerminalRegister() error {
 		return errors.New(Res.Message)
 	} else {
 		log.Info("TerminalRegister", "%v", Res.Message)
-		app.Token = Res.Token
+		app.token = Res.Token
 		app.AppId = Res.Id
 	}
 	return nil
 }
 
 func (t *TerminalServer) TerminalAccessKey() {
+	app.AppId = "3f825f1d-49d1-440b-ae4c-3d3e49d41ae9"
+	app.token = "5fd10c4ee1574dd493e72e784d315b59"
 	params := app.CreateQueryData()
-	params["token"] = app.Token
+	params["token"] = app.token
 	res, _ := app.Http("GET", fmt.Sprintf(Actions["terminal-access-key"], app.AppId), params, nil)
 	Res := struct {
 		AccessKey struct {
@@ -72,6 +74,8 @@ func (t *TerminalServer) TerminalAccessKey() {
 		log.Error("TerminalAccessKey", "%v", err)
 		return
 	}
+	app.secret = Res.AccessKey.Secret
+	app.accessKey = Res.AccessKey.Id
 	f.WriteString(Res.AccessKey.Id + ":" + Res.AccessKey.Secret)
 	f.Close()
 }

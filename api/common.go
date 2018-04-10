@@ -6,6 +6,9 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	log "github.com/liuzheng/golog"
+	"bufio"
+	"os"
+	"strings"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"
@@ -69,6 +72,22 @@ func New(JmsUrl, AppName, AppKeyPath string) *Server {
 	app.Url = JmsUrl
 	app.AppName = AppName
 	app.appKeyPath = AppKeyPath
+	_, err := os.Stat(AppKeyPath)
+	if err == nil {
+		file, _ := os.Open(AppKeyPath)
+		f := bufio.NewReader(file)
+		line, _, _ := f.ReadLine()
+		if len(line) != 0 {
+			q := strings.Split(string(line), ":")
+			app.accessKey = q[0]
+			app.secret = q[1]
+		}
+	} else if os.IsNotExist(err) {
+		log.Warn("New", "file %s not exists", AppKeyPath)
+	} else {
+		log.Warn("New", "file %s stat error: %v", AppKeyPath, err)
+	}
+
 	return &app
 }
 

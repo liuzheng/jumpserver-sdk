@@ -7,9 +7,10 @@ type Server struct {
 	Url        string
 	AppName    string
 	AppId      string
-	appKey     string
 	appKeyPath string
-	Token      string
+	token      string
+	accessKey  string
+	secret     string
 	http       *http.Client
 	Users      UserServer
 	Terminal   TerminalServer
