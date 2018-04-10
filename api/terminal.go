@@ -33,9 +33,12 @@ type TerminalServer struct {
 }
 
 func (t *TerminalServer) TerminalRegister() error {
+	if app.secret != "" {
+		return nil
+	}
 	data := app.CreateQueryData()
-	data["name"] = app.AppName
-	res, _ := app.Http("POST", Actions["terminal-register"], nil, data)
+	data.Data["name"] = app.AppName
+	res, _ := app.Http("POST", Actions["terminal-register"], data)
 	Res := struct {
 		Id      string `json:"id"`
 		Token   string `json:"token"`
@@ -54,11 +57,12 @@ func (t *TerminalServer) TerminalRegister() error {
 }
 
 func (t *TerminalServer) TerminalAccessKey() {
-	app.AppId = "3f825f1d-49d1-440b-ae4c-3d3e49d41ae9"
-	app.token = "5fd10c4ee1574dd493e72e784d315b59"
-	params := app.CreateQueryData()
-	params["token"] = app.token
-	res, _ := app.Http("GET", fmt.Sprintf(Actions["terminal-access-key"], app.AppId), params, nil)
+	if app.secret != "" {
+		return
+	}
+	data := app.CreateQueryData()
+	data.Params["token"] = app.token
+	res, _ := app.Http("GET", fmt.Sprintf(Actions["terminal-access-key"], app.AppId), data)
 	Res := struct {
 		AccessKey struct {
 			Id     string `json:"id"`
@@ -66,13 +70,15 @@ func (t *TerminalServer) TerminalAccessKey() {
 		} `json:"access_key"`
 	}{}
 	json.Unmarshal(res, &Res)
-	f, err := os.Create(app.appKeyPath)
-	if err != nil {
-		log.Error("TerminalAccessKey", "%v", err)
-		return
+	if Res.AccessKey.Id != "" && Res.AccessKey.Secret != "" {
+		f, err := os.Create(app.appKeyPath)
+		if err != nil {
+			log.Error("TerminalAccessKey", "%v", err)
+			return
+		}
+		app.secret = Res.AccessKey.Secret
+		app.accessKey = Res.AccessKey.Id
+		f.WriteString(Res.AccessKey.Id + ":" + Res.AccessKey.Secret)
+		f.Close()
 	}
-	app.secret = Res.AccessKey.Secret
-	app.accessKey = Res.AccessKey.Id
-	f.WriteString(Res.AccessKey.Id + ":" + Res.AccessKey.Secret)
-	f.Close()
 }

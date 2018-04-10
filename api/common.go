@@ -1,7 +1,6 @@
 package api
 
 import (
-	"bytes"
 	"net/http"
 	"io/ioutil"
 	"encoding/json"
@@ -14,6 +13,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"encoding/hex"
+	"bytes"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"
@@ -73,6 +73,11 @@ var (
 	}
 )
 
+type QueryData struct {
+	Params map[string]string
+	Data   map[string]interface{}
+}
+
 //初始化一个ApiServer
 func New(JmsUrl, AppName, AppKeyPath string) *Server {
 	app.Url = JmsUrl
@@ -83,10 +88,11 @@ func New(JmsUrl, AppName, AppKeyPath string) *Server {
 		file, _ := os.Open(AppKeyPath)
 		f := bufio.NewReader(file)
 		line, _, _ := f.ReadLine()
-		if len(line) != 0 {
+		if len(line) > 3 {
 			q := strings.Split(string(line), ":")
 			app.accessKey = q[0]
 			app.secret = q[1]
+			log.Debug("New", "%v", app.secret)
 		}
 	} else if os.IsNotExist(err) {
 		log.Warn("New", "file %s not exists", AppKeyPath)
@@ -102,14 +108,17 @@ func (s *Server) Check() bool {
 	return true
 }
 
-func (s *Server) Http(method, uri string, params, data map[string]interface{}) (resBody []byte, err error) {
-
-	dataJson, err := json.Marshal(data)
-	if err != nil {
-		log.Error("Http", "%v", err)
-		return
+func (s *Server) Http(method, uri string, paramsdata *QueryData) (resBody []byte, err error) {
+	var dataJson []byte
+	if paramsdata != nil {
+		dataJson, err = json.Marshal(paramsdata.Data)
+		if err != nil {
+			log.Error("Http", "%v", err)
+			return
+		}
+		log.Debug("Http", "%v", string(dataJson))
 	}
-	log.Debug("Http", "%v", string(dataJson))
+
 	reqNew := bytes.NewBuffer(dataJson)
 	request, err := http.NewRequest(method, s.Url+uri, reqNew)
 	if err != nil {
@@ -117,15 +126,27 @@ func (s *Server) Http(method, uri string, params, data map[string]interface{}) (
 		return
 	}
 
-	q := request.URL.Query()
-	for k, v := range params {
-		q.Add(k, v.(string))
+	if paramsdata != nil {
+		q := request.URL.Query()
+		for k, v := range paramsdata.Params {
+			q.Add(k, v)
+		}
+		request.URL.RawQuery = q.Encode()
 	}
-	request.URL.RawQuery = q.Encode()
 
 	request.Header.Set("Content-type", "application/json")
-	for k, v := range s.AccessKeyAuth() {
-		request.Header.Set(k, v)
+	if s.secret != "" {
+		for k, v := range s.AccessKeyAuth() {
+			request.Header.Set(k, v)
+		}
+		//} else if s.token != "" {
+		//	for k, v := range s.TokenAuth() {
+		//		request.Header.Set(k, v)
+		//	}
+		//} else if s.session != "" {
+		//	for k, v := range s.SessionAuth() {
+		//		request.Header.Set(k, v)
+		//	}
 	}
 
 	//发起HTTP请求
@@ -146,8 +167,8 @@ func (s *Server) Http(method, uri string, params, data map[string]interface{}) (
 }
 
 //创建请求数据Map
-func (s *Server) CreateQueryData() map[string]interface{} {
-	return make(map[string]interface{})
+func (s *Server) CreateQueryData() *QueryData {
+	return &QueryData{make(map[string]string), make(map[string]interface{})}
 }
 
 func (s *Server) AccessKeyAuth() (result map[string]string) {
