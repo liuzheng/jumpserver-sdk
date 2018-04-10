@@ -22,17 +22,14 @@ type Terminal struct {
 	Comment        string `json:"comment"`
 	//User = models.OneToOneField(User, related_name='terminal', verbose_name='Application User', null=True, on_delete=models.CASCADE)
 }
-type TerminalServer struct {
-}
-type TerminalInterface interface {
-	TerminalRegister() error
-	TerminalAccessKey()
-}
 
 type TerminalView struct {
 	Id      string `json:"id"`
 	Token   string `json:"token"`
 	Message string `json:"msg"`
+}
+
+type TerminalServer struct {
 }
 
 func (t *TerminalServer) TerminalRegister() error {

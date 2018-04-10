@@ -35,14 +35,15 @@ var (
 		"finish-task":                    "/api/terminal/v1/tasks/%s/",
 		"asset":                          "/api/assets/v1/assets/%s/",
 		"system-user":                    "/api/assets/v1/system-user/%s",
-		"user-user":                      "/api/users/v1/users/%s/",
 		"token-asset":                    "/api/users/v1/connection-token/?token=%s",
 		"domain-detail":                  "/api/assets/v1/domain/%s/",
 		"ftp-log-list":                   "/api/audits/v1/ftp-log/",
 
 		// user api
 		"users":                  user_api + "v1/users",                    // UserViewSet
-		"user-group":             user_api + "v1/groups",                   // UserGroupViewSet
+		"user-user":              user_api + "v1/users/%s/",                // GetUserProfile
+		"user-group":             user_api + "v1/groups/%s/",               // GetUserGroupDetial
+		"user-groups":            user_api + "v1/groups/",                  // UserGroupViewSet
 		"user-token":             user_api + "v1/token/",                   // UserToken
 		"connection-token":       user_api + "v1/connection-token/",        // UserConnectionTokenApi
 		"user-profile":           user_api + "v1/profile/",                 // UserProfile

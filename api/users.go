@@ -1,7 +1,6 @@
 package api
 
 import (
-	"time"
 	log "github.com/liuzheng/golog"
 	"encoding/json"
 	"fmt"
@@ -34,39 +33,98 @@ type User struct {
 }
 
 type UserGroup struct {
-	Id          string    `json:"id"`
-	Name        string    `json:"name"`
-	Comment     string    `json:"comment"`
-	DateCreated time.Time `json:"date_created"`
+	Id          string   `json:"id"`
+	Name        string   `json:"name"`
+	Comment     string   `json:"comment"`
+	Users       []string `json:"users"`
+	IsDiscard   bool     `json:"is_discard"`
+	DiscardTime string   `json:"discard_time"`
+	DateCreated string   `json:"date_created"`
+	CreatedBy   string   `json:"created_by"`
 }
-type UsersInterface interface {
-	UserViewSet() []User
-	UserProfile() User
-	GetUserProfile() User
-}
+
 type UserServer struct {
 }
 
+// Get all users profile list
 func (u *UserServer) UserViewSet() (users []User) {
 	res, _ := app.Http("GET", Actions["users"], nil, nil)
 	log.Debug("UserViewSet", "%v", string(res))
 	return
 }
-func (u *UserServer) UserProfile() (user User) {
-	res, _ := app.Http("GET", Actions["user-profile"], nil, nil)
-	log.Debug("UserViewSet", "%v", string(res))
-	ok := json.Unmarshal(res, &user)
-	log.Debug("UserViewSet", "%v", ok)
 
-	return
-}
-
-func (u *UserServer) UserGroupViewSet() (user User) {
-	return
-}
-
+// Get a user profile
 func (u *UserServer) GetUserProfile(uid string) (user User) {
 	res, _ := app.Http("GET", fmt.Sprintf(Actions["user-user"], uid), nil, nil)
+	json.Unmarshal(res, &user)
+	return
+}
+
+// Get one user group detial
+func (u *UserServer) GetUserGroupDetial(gid string) (group UserGroup) {
+	res, _ := app.Http("GET", fmt.Sprintf(Actions["user-group"], gid), nil, nil)
+	json.Unmarshal(res, &group)
+	return
+}
+
+// Get all user groups detial list
+func (u *UserServer) UserGroupViewSet() (groups []UserGroup) {
+	res, _ := app.Http("GET", Actions["user-groups"], nil, nil)
+	json.Unmarshal(res, &groups)
+	return
+}
+
+func (u *UserServer) UserToken() (user User) {
+	res, _ := app.Http("GET", Actions["user-token"], nil, nil)
+	json.Unmarshal(res, &user)
+	return
+}
+
+func (u *UserServer) UserConnectionTokenApi() (user User) {
+	res, _ := app.Http("GET", Actions["connection-token"], nil, nil)
+	json.Unmarshal(res, &user)
+	return
+}
+
+func (u *UserServer) UserProfile() (user User) {
+	res, _ := app.Http("GET", Actions["user-profile"], nil, nil)
+	json.Unmarshal(res, &user)
+	return
+}
+
+func (u *UserServer) UserAuthApi() (user User) {
+	res, _ := app.Http("GET", Actions["user-auth"], nil, nil)
+	json.Unmarshal(res, &user)
+	return
+}
+
+func (u *UserServer) ChangeUserPasswordApi(uid string) (user User) {
+	res, _ := app.Http("GET", fmt.Sprintf(Actions["change-user-password"], uid), nil, nil)
+	json.Unmarshal(res, &user)
+	return
+}
+func (u *UserServer) UserResetPasswordApi(uid string) (user User) {
+	res, _ := app.Http("GET", fmt.Sprintf(Actions["user-reset-password"], uid), nil, nil)
+	json.Unmarshal(res, &user)
+	return
+}
+func (u *UserServer) UserResetPKApi(uid string) (user User) {
+	res, _ := app.Http("GET", fmt.Sprintf(Actions["user-public-key-reset"], uid), nil, nil)
+	json.Unmarshal(res, &user)
+	return
+}
+func (u *UserServer) UserUpdatePKApi(uid string) (user User) {
+	res, _ := app.Http("GET", fmt.Sprintf(Actions["user-public-key-update"], uid), nil, nil)
+	json.Unmarshal(res, &user)
+	return
+}
+func (u *UserServer) UserUpdateGroupApi(uid string) (user User) {
+	res, _ := app.Http("GET", fmt.Sprintf(Actions["user-update-group"], uid), nil, nil)
+	json.Unmarshal(res, &user)
+	return
+}
+func (u *UserServer) UserGroupUpdateUserApi(gid string) (user User) {
+	res, _ := app.Http("GET", fmt.Sprintf(Actions["user-group-update-user"], gid), nil, nil)
 	json.Unmarshal(res, &user)
 	return
 }
