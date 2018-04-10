@@ -1,5 +1,13 @@
 package api
 
+import (
+	log "github.com/liuzheng/golog"
+	"encoding/json"
+	"github.com/pkg/errors"
+	"fmt"
+	"os"
+)
+
 type Terminal struct {
 	Id             string `json:"id"`
 	Name           string `json:"name"`
@@ -17,12 +25,53 @@ type Terminal struct {
 type TerminalServer struct {
 }
 type TerminalInterface interface {
-	TerminalViewSet()
+	TerminalRegister() error
+	TerminalAccessKey()
 }
 
-func (t *TerminalServer) TerminalViewSet(appid string) {
-	data := app.CreateQueryData()
-	data["name"] = appid
-	res, _ := app.Http("POST", Actions["terminal-register"], data)
+type TerminalView struct {
+	Id      string `json:"id"`
+	Token   string `json:"token"`
+	Message string `json:"msg"`
+}
 
+func (t *TerminalServer) TerminalRegister() error {
+	data := app.CreateQueryData()
+	data["name"] = app.AppName
+	res, _ := app.Http("POST", Actions["terminal-register"], nil, data)
+	Res := struct {
+		Id      string `json:"id"`
+		Token   string `json:"token"`
+		Message string `json:"msg"`
+	}{}
+	json.Unmarshal(res, &Res)
+	if Res.Id == "" || Res.Token == "" {
+		log.Error("TerminalRegister", "%v", Res.Message)
+		return errors.New(Res.Message)
+	} else {
+		log.Info("TerminalRegister", "%v", Res.Message)
+		app.Token = Res.Token
+		app.AppId = Res.Id
+	}
+	return nil
+}
+
+func (t *TerminalServer) TerminalAccessKey() {
+	params := app.CreateQueryData()
+	params["token"] = app.Token
+	res, _ := app.Http("GET", fmt.Sprintf(Actions["terminal-access-key"], app.AppId), params, nil)
+	Res := struct {
+		AccessKey struct {
+			Id     string `json:"id"`
+			Secret string `json:"secret"`
+		} `json:"access_key"`
+	}{}
+	json.Unmarshal(res, &Res)
+	f, err := os.Create(app.appKeyPath)
+	if err != nil {
+		log.Error("TerminalAccessKey", "%v", err)
+		return
+	}
+	f.WriteString(Res.AccessKey.Id + ":" + Res.AccessKey.Secret)
+	f.Close()
 }

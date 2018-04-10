@@ -4,23 +4,19 @@ import "net/http"
 
 //jms服务器配置
 type Server struct {
-	Url      string
-	AppId    string
-	appKey   string
-	Token    UserToken
-	http     *http.Client
-	Users    UserServer
-	Terminal TerminalServer
+	Url        string
+	AppName    string
+	AppId      string
+	appKey     string
+	appKeyPath string
+	Token      string
+	http       *http.Client
+	Users      UserServer
+	Terminal   TerminalServer
 }
 
 // api操作对应URL
 type Action map[string]string
-
-// 用户登陆TOKEN
-type UserToken struct {
-	Token   string
-	Expired int
-}
 
 // 服务器登陆凭证
 type LoginCredit struct {

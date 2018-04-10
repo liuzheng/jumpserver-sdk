@@ -50,7 +50,7 @@ var (
 		"terminal-status":     terminal_api + "v1/terminal/%s/status",     // StatusViewSet
 		"terminal-sessions":   terminal_api + "v1/terminal/%s/sessions",   // SessionViewSet
 		"tasks":               terminal_api + "v1/tasks",                  // TaskViewSet
-		"terminal-register":   terminal_api + "v1/terminal",               // TerminalViewSet
+		"terminal-register":   terminal_api + "v1/terminal/",              // TerminalViewSet
 		"command":             terminal_api + "v1/command",                // CommandViewSet
 		"session":             terminal_api + "v1/sessions",               // SessionViewSet
 		"status":              terminal_api + "v1/status",                 // StatusViewSet
@@ -65,10 +65,10 @@ var (
 )
 
 //初始化一个ApiServer
-func New(JmsUrl, AppId, AppKeyPath string) *Server {
+func New(JmsUrl, AppName, AppKeyPath string) *Server {
 	app.Url = JmsUrl
-	app.AppId = AppId
-	app.appKey = AppKeyPath
+	app.AppName = AppName
+	app.appKeyPath = AppKeyPath
 	return &app
 }
 
@@ -77,7 +77,7 @@ func (s *Server) Check() bool {
 	return true
 }
 
-func (s *Server) Http(method, uri string, data map[string]interface{}) (resBody []byte, err error) {
+func (s *Server) Http(method, uri string, params, data map[string]interface{}) (resBody []byte, err error) {
 
 	dataJson, err := json.Marshal(data)
 	if err != nil {
@@ -91,9 +91,14 @@ func (s *Server) Http(method, uri string, data map[string]interface{}) (resBody 
 		log.Error("Http", "%v", err)
 		return
 	}
+
+	q := request.URL.Query()
+	for k, v := range params {
+		q.Add(k, v.(string))
+	}
+	request.URL.RawQuery = q.Encode()
+
 	request.Header.Set("Content-type", "application/json")
-	request.Header.Set("Token", s.Token.Token)
-	request.Header.Set("AppId", s.AppId)
 
 	//发起HTTP请求
 	response, err := s.http.Do(request)

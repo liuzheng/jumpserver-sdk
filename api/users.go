@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 )
 
-
 type User struct {
 	Id              string      `json:"id"`
 	Username        string      `json:"username"`
@@ -47,12 +46,12 @@ type UserServer struct {
 }
 
 func (u *UserServer) UserViewSet() (users []User) {
-	res, _ := app.Http("GET", Actions["users"], nil)
+	res, _ := app.Http("GET", Actions["users"], nil, nil)
 	log.Debug("UserViewSet", "%v", res)
 	return
 }
 func (u *UserServer) UserProfile() (user User) {
-	res, _ := app.Http("GET", Actions["user-profile"], nil)
+	res, _ := app.Http("GET", Actions["user-profile"], nil, nil)
 	log.Debug("UserViewSet", "%v", string(res))
 	ok := json.Unmarshal(res, &user)
 	log.Debug("UserViewSet", "%v", ok)
