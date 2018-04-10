@@ -9,6 +9,11 @@ import (
 	"bufio"
 	"os"
 	"strings"
+	"time"
+	"crypto/md5"
+	"encoding/base64"
+	"fmt"
+	"encoding/hex"
 )
 
 const TimeFormat = "2006-01-02 15:04:05"
@@ -118,6 +123,9 @@ func (s *Server) Http(method, uri string, params, data map[string]interface{}) (
 	request.URL.RawQuery = q.Encode()
 
 	request.Header.Set("Content-type", "application/json")
+	for k, v := range s.AccessKeyAuth() {
+		request.Header.Set(k, v)
+	}
 
 	//发起HTTP请求
 	response, err := s.http.Do(request)
@@ -139,4 +147,24 @@ func (s *Server) Http(method, uri string, params, data map[string]interface{}) (
 //创建请求数据Map
 func (s *Server) CreateQueryData() map[string]interface{} {
 	return make(map[string]interface{})
+}
+
+func (s *Server) AccessKeyAuth() (result map[string]string) {
+	result = make(map[string]string)
+	result["Date"] = time.Now().Format("Mon, 2 Jan 2006 15:04:05 GMT")
+	md5sum := md5.New()
+	md5sum.Write([]byte(fmt.Sprintf("%s\n%s", s.secret, result["Date"])))
+	signature := base64.StdEncoding.EncodeToString([]byte(hex.EncodeToString(md5sum.Sum(nil))))
+	result["Authorization"] = "Sign " + s.accessKey + ":" + signature
+	return
+}
+
+func (s *Server) TokenAuth() (result map[string]string) {
+	result = make(map[string]string)
+	result["Authorization"] = "Bearer " + s.token
+	return
+}
+
+func (s *Server) SessionAuth() (result map[string]string) {
+	return
 }
